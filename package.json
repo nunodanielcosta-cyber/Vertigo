@@ -1,0 +1,25 @@
+{
+  "name": "vertigo",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Vertigo — análise automática de nistagmo por visão computacional e apoio ao diagnóstico de vertigem posicional",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "make-test-video": "node scripts/make-synthetic-y4m.mjs",
+    "postinstall": "node scripts/setup-assets.mjs",
+    "e2e": "node scripts/e2e-smoke.mjs"
+  },
+  "dependencies": {
+    "@mediapipe/tasks-vision": "^1.2.3"
+  },
+  "devDependencies": {
+    "typescript": "^7.0.2",
+    "vite": "^8.3.8",
+    "vitest": "^5.1.0"
+  }
+}

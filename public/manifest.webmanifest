@@ -1,0 +1,10 @@
+{
+  "name": "Vertigo — análise de nistagmo",
+  "short_name": "Vertigo",
+  "lang": "pt-PT",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f6f6f4",
+  "theme_color": "#1f5fae",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}
