@@ -1,4 +1,4 @@
-import { page, q, esc, icon, experimental, collection, uid, fmtDate, pills, toast, download } from '../_shared';
+import { ask, page, q, esc, icon, experimental, collection, uid, fmtDate, pills, toast, download } from '../_shared';
 import type { Rec } from '../../core/storage';
 import { putBlob, getBlob, delBlob } from '../../core/idb';
 import { CameraSource } from '../../tracking/sources';
@@ -119,7 +119,7 @@ export function nystagmusRecView(app: HTMLElement) {
       if (blob && r) download(`nistagmo-${r.date.slice(0, 16).replace(/[:T]/g, '-')}.${(r.mime ?? '').includes('mp4') ? 'mp4' : 'webm'}`, blob);
     }));
     app.querySelectorAll<HTMLElement>('[data-del]').forEach((b) => (b.onclick = async () => {
-      if (!confirm('Apagar esta gravação?')) return;
+      if (!(await ask('Apagar esta gravação?', { ok: 'Apagar', danger: true }))) return;
       try { await delBlob(b.dataset.del!); } catch { /* ignorar */ }
       nystRecs.remove(b.dataset.del!);
       renderList();

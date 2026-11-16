@@ -1,6 +1,7 @@
-import { page, q, esc, icon, disclaimer, collection, uid, fmtDate, resultBox, navTile, Stopwatch, fmt, download, toCSV } from './_shared';
+import { ask, page, q, esc, icon, disclaimer, collection, uid, fmtDate, resultBox, navTile, Stopwatch, fmt, download, toCSV } from './_shared';
 import { SCALES, getScale, tugInterpret, type Scale } from '../clinical/scales';
 import { lineChart } from '../core/chart';
+import { render } from '../core/router';
 import type { Rec } from '../core/storage';
 
 export interface ScaleRecord extends Rec { scaleId: string; values: (number | null)[]; total: number; display: string; note?: string }
@@ -30,7 +31,7 @@ function historyCard(recs: ScaleRecord[]) {
     <ul class="rec-list">${recs.slice(0, 40).map((r) => `<li><span><b>${esc(getScale(r.scaleId)?.short ?? r.scaleId.toUpperCase())}</b> ${esc(r.display)} <small class="muted">${fmtDate(r.date, true)}</small></span><button class="icon-btn" data-del="${r.id}" aria-label="Apagar">${icon('trash')}</button></li>`).join('')}</ul></div>`;
 }
 function wireHistory(app: HTMLElement) {
-  app.querySelectorAll<HTMLElement>('[data-del]').forEach((b) => (b.onclick = () => { if (confirm('Apagar este registo?')) { scaleRecords.remove(b.dataset.del!); location.reload(); } }));
+  app.querySelectorAll<HTMLElement>('[data-del]').forEach((b) => (b.onclick = async () => { if (await ask('Apagar este registo?', { ok: 'Apagar', danger: true })) { scaleRecords.remove(b.dataset.del!); render(); } }));
   const c = app.querySelector<HTMLElement>('#csv');
   if (c) c.onclick = () => download('vertigo-escalas.csv', toCSV([['data', 'escala', 'total', 'resultado'], ...scaleRecords.all().map((r) => [r.date, r.scaleId, r.total, r.display])]), 'text/csv');
 }
@@ -98,9 +99,9 @@ export function scaleView(app: HTMLElement, [id]: string[]) {
     const swc = new Stopwatch((t) => { label.textContent = `${t.toFixed(1)} s`; b.classList.toggle('done', t >= target); });
     b.onclick = () => { if (!swc.running && swc.value > 0) swc.reset(); else swc.toggle(); };
   });
-  q('#save').onclick = () => {
+  q('#save').onclick = async () => {
     const r = s.score(values);
-    if (!r.complete && !confirm('Há perguntas sem resposta. Guardar mesmo assim?')) return;
+    if (!r.complete && !(await ask('Há perguntas sem resposta. Guardar mesmo assim?', { ok: 'Guardar' }))) return;
     scaleRecords.save({ id: uid(), date: new Date().toISOString(), scaleId: s.id, values: [...values], total: r.total, display: r.display, note: (q('#note') as HTMLInputElement).value });
     location.hash = back;
   };

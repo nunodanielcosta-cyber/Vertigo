@@ -1,4 +1,4 @@
-import { page, q, esc, icon, collection, uid, fmtDate, resultBox, fmt, toast } from '../_shared';
+import { ask, page, q, esc, icon, collection, uid, fmtDate, resultBox, fmt, toast } from '../_shared';
 import { prophylaxisResponse, triggerFrequency, monthlyCounts, type Prophylaxis } from '../../clinical/diary';
 import { attacksCol, daysCol } from './diary';
 import { barChart } from '../../core/chart';
@@ -55,6 +55,6 @@ export function migraineView(app: HTMLElement) {
     toast('Adicionado');
     migraineView(app);
   };
-  app.querySelectorAll<HTMLElement>('[data-del]').forEach((b) => (b.onclick = () => { if (confirm('Apagar?')) { prophCol.remove(b.dataset.del!); migraineView(app); } }));
+  app.querySelectorAll<HTMLElement>('[data-del]').forEach((b) => (b.onclick = async () => { if (await ask('Apagar este tratamento?', { ok: 'Apagar', danger: true })) { prophCol.remove(b.dataset.del!); migraineView(app); } }));
   app.querySelectorAll<HTMLElement>('[data-end]').forEach((b) => (b.onclick = () => { const p = prophCol.get(b.dataset.end!); if (p) { prophCol.save({ ...p, end: new Date().toISOString() }); migraineView(app); } }));
 }

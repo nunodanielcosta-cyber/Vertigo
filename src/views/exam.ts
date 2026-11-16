@@ -12,6 +12,7 @@ import { icon } from '../ui/icons';
 import { CloseupProcessor, FaceProcessor, type FrameProcessor, type Overlay } from '../tracking/processors';
 import { CameraSource, processVideoFile } from '../tracking/sources';
 import { onLeave } from '../core/router';
+import { ask } from '../core/ui';
 
 const app = document.getElementById('app')!;
 let current: Exam | null = null;
@@ -117,8 +118,8 @@ function home() {
     current = loadExams().find((e) => e.id === el.dataset.open) ?? null;
     if (current) go(examView);
   });
-  on(app, '[data-del]', 'click', (_, el) => {
-    if (confirm('Apagar este exame deste dispositivo?')) { deleteExam(el.dataset.del!); go(home); }
+  on(app, '[data-del]', 'click', async (_, el) => {
+    if (await ask('Apagar este exame deste dispositivo?', { ok: 'Apagar', danger: true })) { deleteExam(el.dataset.del!); go(home); }
   });
 }
 

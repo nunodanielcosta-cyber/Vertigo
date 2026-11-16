@@ -1,4 +1,5 @@
 import type { Exam } from './types';
+import { download } from './core/ui';
 
 /**
  * Persistência local (apenas neste dispositivo). Os vídeos NÃO são guardados — só as
@@ -45,10 +46,5 @@ export function deleteExam(id: string) {
 }
 
 export function exportExam(exam: Exam) {
-  const blob = new Blob([JSON.stringify(exam, (k, v) => (k === 'videoUrl' ? undefined : v), 2)], { type: 'application/json' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `vertigo-${exam.label.replace(/[^\w-]+/g, '_')}.json`;
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  void download(`vertigo-${exam.label.replace(/[^\w-]+/g, '_')}.json`, JSON.stringify(exam, (k, v) => (k === 'videoUrl' ? undefined : v), 2), 'application/json');
 }

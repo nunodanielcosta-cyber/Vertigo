@@ -81,8 +81,24 @@ export function formData(form: HTMLFormElement) {
   };
 }
 
-export function download(filename: string, content: BlobPart, mime = 'application/octet-stream') {
+type ClaudeHost = { use?: (name: string) => Promise<{ save: (r: { filename: string; data: Blob }) => Promise<unknown> } | null> };
+/** Dentro de uma página publicada no claude.ai, as transferências passam pela capacidade «downloads». */
+const hostDownloads = (() => {
+  const c = (window as unknown as { claude?: ClaudeHost }).claude;
+  return c?.use ? c.use('downloads').catch(() => null) : Promise.resolve(null);
+})();
+
+export async function download(filename: string, content: BlobPart, mime = 'application/octet-stream') {
   const blob = content instanceof Blob ? content : new Blob([content], { type: mime });
+  const host = await hostDownloads;
+  if (host) {
+    try { await host.save({ filename, data: blob }); } catch (e) {
+      const code = (e as { code?: string })?.code;
+      if (code === 'rejected_extension') toast('Este formato não pode ser descarregado aqui.');
+      else if (code !== 'declined') toast('Não foi possível descarregar o ficheiro.');
+    }
+    return;
+  }
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = filename;
@@ -106,6 +122,9 @@ export const fmtDate = (iso: string, withTime = false) => {
     : d.toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit', year: 'numeric' });
 };
 
+/** true quando a app corre dentro de uma página publicada no claude.ai (impressão e câmara indisponíveis). */
+export const embedded = !!(window as unknown as { claude?: unknown }).claude;
+
 export function toast(msg: string) {
   const t = document.createElement('div');
   t.className = 'toast';
@@ -121,7 +140,7 @@ export function disclaimer(text = 'Ferramenta de apoio — não substitui o juí
 }
 
 export function experimental() {
-  return `<aside class="experimental">${icon('flask')}<p><b>Funcionalidade experimental.</b> Serve para apoio e investigação, não para diagnóstico validado. Os valores dependem do telemóvel, da colocação e da forma de execução.</p></aside>`;
+  return `<aside class="experimental">${icon('flask')}<p><b>Funcionalidade experimental.</b> Serve para apoio e investigação, não para diagnóstico validado. Os valores dependem do telemóvel, da colocação e da forma de execução.${embedded ? ' <b>Nesta versão partilhada a câmara e os sensores de movimento não estão disponíveis</b> — use a app instalada no telemóvel.' : ''}</p></aside>`;
 }
 
 /** Badge de resultado. tone: ok | warn | bad | info */
@@ -134,6 +153,58 @@ export function resultBox(title: string, body: string, tone: 'ok' | 'warn' | 'ba
 }
 
 export const fmt = (x: number | null | undefined, d = 1) => (x === null || x === undefined || !Number.isFinite(x) ? '—' : x.toFixed(d).replace('.', ','));
+
+/**
+ * Diálogo de confirmação dentro da página (substitui confirm(), que alguns contextos ignoram).
+ */
+export function ask(message: string, o: { ok?: string; cancel?: string; danger?: boolean } = {}): Promise<boolean> {
+  return new Promise((resolve) => {
+    const d = document.createElement('div');
+    d.className = 'dialog-backdrop';
+    d.innerHTML = `<div class="dialog card" role="alertdialog" aria-modal="true" aria-labelledby="dlgMsg">
+      <p id="dlgMsg">${esc(message)}</p>
+      <div class="actionbar"><button class="btn ${o.danger ? 'danger' : 'primary'}" data-v="1">${esc(o.ok ?? 'Confirmar')}</button><button class="btn" data-v="0">${esc(o.cancel ?? 'Cancelar')}</button></div>
+    </div>`;
+    const done = (v: boolean) => { d.remove(); document.removeEventListener('keydown', key); resolve(v); };
+    const key = (e: KeyboardEvent) => { if (e.key === 'Escape') done(false); };
+    d.addEventListener('click', (e) => {
+      const b = (e.target as HTMLElement).closest('[data-v]') as HTMLElement | null;
+      if (b) done(b.dataset.v === '1');
+      else if (e.target === d) done(false);
+    });
+    document.addEventListener('keydown', key);
+    document.body.appendChild(d);
+    (d.querySelector('[data-v="1"]') as HTMLElement).focus();
+  });
+}
+
+/** Aviso importante dentro da página (substitui alert()). */
+export function notice(message: string, title = 'Atenção'): Promise<void> {
+  return new Promise((resolve) => {
+    const d = document.createElement('div');
+    d.className = 'dialog-backdrop';
+    d.innerHTML = `<div class="dialog card" role="alertdialog" aria-modal="true"><h3>${esc(title)}</h3><p>${esc(message)}</p>
+      <div class="actionbar"><button class="btn primary">Compreendi</button></div></div>`;
+    d.querySelector('button')!.addEventListener('click', () => { d.remove(); resolve(); });
+    document.body.appendChild(d);
+    (d.querySelector('button') as HTMLElement).focus();
+  });
+}
+
+/** Pede um valor 0–10 com um cursor (substitui prompt()). */
+export function askScore(message: string, initial = 0): Promise<number> {
+  return new Promise((resolve) => {
+    const d = document.createElement('div');
+    d.className = 'dialog-backdrop';
+    d.innerHTML = `<div class="dialog card" role="dialog" aria-modal="true"><p><b>${esc(message)}</b> <output>${initial}</output>/10</p>
+      <input type="range" min="0" max="10" value="${initial}" aria-label="${esc(message)}">
+      <div class="actionbar"><button class="btn primary">Guardar</button></div></div>`;
+    const r = d.querySelector('input') as HTMLInputElement;
+    r.oninput = () => (d.querySelector('output')!.textContent = r.value);
+    d.querySelector('button')!.addEventListener('click', () => { d.remove(); resolve(Number(r.value)); });
+    document.body.appendChild(d);
+  });
+}
 
 /** Cronómetro simples com mostrador. */
 export class Stopwatch {

@@ -1,4 +1,4 @@
-import { page, q, icon, pills, uid, toast, fmt } from '../_shared';
+import { ask, page, q, icon, pills, uid, toast, fmt } from '../_shared';
 import { sessionsCol } from './rehab';
 import { HeadTracker } from '../../core/headTracker';
 import { Metronome, beepEnd } from '../../core/audio';
@@ -39,7 +39,7 @@ export function vorView(app: HTMLElement) {
   onLeave(() => { running = false; cancelAnimationFrame(raf); clearInterval(timer); metro.stop(); });
 
   q('#go').onclick = async () => {
-    if (running) return stop(false);
+    if (running) { void stop(false); return; }
     const type = (app.querySelector('input[name="type"]:checked') as HTMLInputElement).value;
     const plane = (app.querySelector('input[name="plane"]:checked') as HTMLInputElement).value as 'yaw' | 'pitch';
     const bpm = Number((q('#bpm') as HTMLInputElement).value) || 120;
@@ -76,10 +76,10 @@ export function vorView(app: HTMLElement) {
     };
     loop();
     q('#tm').innerHTML = `${left}<small> s</small>`;
-    timer = window.setInterval(() => { left--; q('#tm').innerHTML = `${Math.max(0, left)}<small> s</small>`; if (left <= 0) stop(true); }, 1000);
+    timer = window.setInterval(() => { left--; q('#tm').innerHTML = `${Math.max(0, left)}<small> s</small>`; if (left <= 0) void stop(true); }, 1000);
   };
 
-  const stop = (complete: boolean) => {
+  const stop = async (complete: boolean) => {
     running = false;
     cancelAnimationFrame(raf);
     clearInterval(timer);
@@ -90,7 +90,7 @@ export function vorView(app: HTMLElement) {
     const plane = (app.querySelector('input[name="plane"]:checked') as HTMLInputElement).value;
     const pct = okSamples.length ? Math.round((okSamples.filter(Boolean).length / okSamples.length) * 100) : null;
     const detail = `${type.toUpperCase()} ${plane === 'yaw' ? 'horizontal' : 'vertical'} · ${(q('#bpm') as HTMLInputElement).value} bpm${pct !== null ? ` · movimento confirmado ${pct} %` : ''}`;
-    if (complete || confirm('Registar esta sessão?')) {
+    if (complete || (await ask('Registar esta sessão incompleta?', { ok: 'Registar', cancel: 'Não registar' }))) {
       sessionsCol.save({ id: uid(), date: new Date().toISOString(), kind: 'vor', exercises: [type === 'x2' ? 'vor2' : plane === 'yaw' ? 'vor1-h' : 'vor1-v'], minutes: Math.max(1, Math.round(Number((q('#dur') as HTMLSelectElement).value) / 60)), detail });
       toast('Sessão registada');
     }

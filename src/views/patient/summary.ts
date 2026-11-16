@@ -1,4 +1,4 @@
-import { page, q, esc, icon, fmtDate, fmt, setting } from '../_shared';
+import { embedded, page, q, esc, icon, fmtDate, fmt, setting } from '../_shared';
 import { attacksCol, daysCol } from './diary';
 import { hearingCol } from './hearing';
 import { prophCol } from './migraine';
@@ -22,6 +22,7 @@ export function summaryView(app: HTMLElement) {
     <label class="field"><span>Nome ou identificação (opcional)</span><input type="text" id="lab" value="${esc(s.label)}"></label>
     <label class="field"><span>Período</span><select id="days">${[30, 60, 90, 180].map((d) => `<option value="${d}"${d === s.days ? ' selected' : ''}>Últimos ${d} dias</option>`).join('')}</select></label>
     <button class="btn primary" id="pr">${icon('print')}Imprimir / guardar PDF</button>
+    ${embedded ? '<p class="small muted">Nesta versão partilhada a impressão está desativada. Use a app instalada (web, iPhone ou Windows) para gerar o PDF.</p>' : ''}
   </div>
   <article class="onepage" id="sheet"></article>`);
   const render = () => {

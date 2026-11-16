@@ -1,4 +1,4 @@
-import { page, q, esc, icon, collection, uid, fmtDate, pills, checks, download, toCSV, toast, navigate, todayISO } from '../_shared';
+import { ask, notice, page, q, esc, icon, collection, uid, fmtDate, pills, checks, download, toCSV, toast, navigate, todayISO } from '../_shared';
 import { SYMPTOMS, TRIGGERS, KINDS, monthlyCounts, weeklyCounts, triggerFrequency, factorAssociation, type Attack, type DayLog } from '../../clinical/diary';
 import { barChart, lineChart } from '../../core/chart';
 import { nystRecs } from '../sensors/nystagmusRec';
@@ -36,7 +36,7 @@ export function attackFormView(app: HTMLElement, params: string[]) {
   </form>`);
   const f = q<HTMLFormElement>('#f');
   f.severity.oninput = () => (q('#sevO').textContent = f.severity.value);
-  f.onsubmit = (e) => {
+  f.onsubmit = async (e) => {
     e.preventDefault();
     const fd = new FormData(f);
     attacksCol.save({
@@ -44,12 +44,12 @@ export function attackFormView(app: HTMLElement, params: string[]) {
       kind: String(fd.get('kind')) as Attack['kind'], ear: String(fd.get('ear')) as Attack['ear'], symptoms: fd.getAll('symptoms') as string[], triggers: fd.getAll('triggers') as string[],
       meds: String(fd.get('meds') ?? ''), notes: String(fd.get('notes') ?? ''),
     });
-    if ((fd.getAll('symptoms') as string[]).includes('neuro')) alert('Registou sintomas neurológicos (visão dupla, fala, fraqueza). Se são novos ou estão a acontecer agora, ligue 112.');
+    if ((fd.getAll('symptoms') as string[]).includes('neuro')) await notice('Registou sintomas neurológicos (visão dupla, fala, fraqueza). Se são novos ou estão a acontecer agora, ligue 112.');
     toast('Crise registada');
     navigate('/doente/diario');
   };
   const del = app.querySelector<HTMLElement>('#del');
-  if (del) del.onclick = () => { if (confirm('Apagar esta crise?')) { attacksCol.remove(a.id); navigate('/doente/diario'); } };
+  if (del) del.onclick = async () => { if (await ask('Apagar esta crise?', { ok: 'Apagar', danger: true })) { attacksCol.remove(a.id); navigate('/doente/diario'); } };
 }
 
 const slider = (name: string, label: string, v: number, max = 10, lo = '', hi = '') => `<div class="q-block"><b>${label}: <output data-o="${name}">${v}</output></b><input type="range" name="${name}" min="0" max="${max}" value="${v}" aria-label="${label}"><span class="range-ends"><small>${lo}</small><small>${hi}</small></span></div>`;

@@ -3,7 +3,7 @@ import type { Rec } from '../../core/storage';
 import { EXERCISES, GROUPS, DEFAULT_PROGRAM, getExercise, icsReminders, type Exercise } from '../../content/rehab';
 import { Metronome, beep, beepEnd, speak } from '../../core/audio';
 import { keepAwake } from '../../core/sensors';
-import { onLeave } from '../../core/router';
+import { onLeave, render } from '../../core/router';
 
 export interface RehabSession extends Rec { kind: 'program' | 'vor' | 'okn'; exercises: string[]; minutes: number; before?: number; after?: number; level?: number; detail?: string }
 export const sessionsCol = collection<RehabSession>('rehab-sessions', 5000);
@@ -159,7 +159,7 @@ function runSession(el: HTMLElement, list: Exercise[]) {
       sessionsCol.save({ id: uid(), date: new Date().toISOString(), kind: 'program', exercises: list.slice(0, Math.max(1, i)).map((x) => x.id), minutes: Math.max(1, Math.round((Date.now() - start) / 60000)), before, after: Number((q('#a', el) as HTMLInputElement).value) });
       close();
       toast('Sessão registada');
-      location.reload();
+      render();
     };
   };
   askBefore();

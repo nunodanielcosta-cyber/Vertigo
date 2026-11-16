@@ -1,4 +1,4 @@
-import { page, q, icon, download, toast, todayISO } from './_shared';
+import { ask, page, q, icon, download, toast, todayISO } from './_shared';
 import { exportAll, importAll } from '../core/storage';
 
 export function dataView(app: HTMLElement) {
@@ -29,13 +29,13 @@ export function dataView(app: HTMLElement) {
     try {
       const j = JSON.parse(await f.text());
       if (j.app !== 'vertigo' || !j.data) throw new Error('formato');
-      if (!confirm('Importar vai substituir os dados com o mesmo nome. Continuar?')) return;
+      if (!(await ask('Importar vai substituir os dados com o mesmo nome. Continuar?', { ok: 'Importar' }))) return;
       importAll(j.data);
       toast('Dados importados');
     } catch { toast('Ficheiro inválido'); }
   };
-  q('#wipe').onclick = () => {
-    if (!confirm('Apagar TODOS os dados da Vertigo neste dispositivo? Não é reversível.')) return;
+  q('#wipe').onclick = async () => {
+    if (!(await ask('Apagar TODOS os dados da Vertigo neste dispositivo? Não é reversível.', { ok: 'Apagar tudo', danger: true }))) return;
     Object.keys(localStorage).filter((k) => k.startsWith('vertigo.')).forEach((k) => localStorage.removeItem(k));
     try { indexedDB.deleteDatabase('vertigo-media'); } catch { /* ignorar */ }
     toast('Dados apagados');

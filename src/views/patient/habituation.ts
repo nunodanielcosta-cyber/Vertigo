@@ -1,4 +1,4 @@
-import { page, q, icon, pills, uid, toast, setting, fmtDate, esc } from '../_shared';
+import { askScore, page, q, icon, pills, uid, toast, setting, fmtDate, esc } from '../_shared';
 import { sessionsCol } from './rehab';
 import { keepAwake } from '../../core/sensors';
 import { onLeave } from '../../core/router';
@@ -116,24 +116,24 @@ export function habituationView(app: HTMLElement) {
       q('#ot').textContent = `${Math.floor(Math.max(0, left) / 60)}:${String(Math.floor(Math.max(0, left) % 60)).padStart(2, '0')}`;
       if (vr) { draw(cv.width / 2, cv.height, 0, t); draw(cv.width / 2, cv.height, cv.width / 2, t); }
       else draw(cv.width, cv.height, 0, t);
-      if (left <= 0) return end(true);
+      if (left <= 0) { void end(true); return; }
       raf = requestAnimationFrame(loop);
     };
-    const end = (complete: boolean) => {
+    const end = async (complete: boolean) => {
       running = false;
       cancelAnimationFrame(raf);
       window.removeEventListener('resize', resize);
       box.hidden = true;
       if (document.fullscreenElement) void document.exitFullscreen();
       const elapsed = Math.max(1, Math.round((performance.now() - t0) / 60000));
-      const after = Number(prompt('Tontura agora (0–10)?', String(before)) ?? before);
+      const after = await askScore('Tontura agora:', before);
       const nx = nextLevel(level, before, Number.isFinite(after) ? after : before);
       st.set({ ...st.get(), level: nx.level });
       sessionsCol.save({ id: uid(), date: new Date().toISOString(), kind: 'okn', exercises: ['okn'], minutes: elapsed, before, after, level, detail: `${pattern}, ${dir}${complete ? '' : ' (interrompida)'} · ${nx.text}` });
       toast(nx.text);
       habituationView(app);
     };
-    q('#stop').onclick = () => end(false);
+    q('#stop').onclick = () => void end(false);
     loop();
   };
 }
