@@ -1,13 +1,56 @@
 # Vertigo
 
-Aplicação web (PWA, funciona no telemóvel e no computador) que **grava os olhos do doente durante as provas posicionais**
-(Dix-Hallpike, supine roll test, …), **analisa o nistagmo por visão computacional** e sugere o
-**diagnóstico diferencial** e a **manobra de reposição** adequada.
+Aplicação web (PWA, funciona no telemóvel e no computador; também em Windows e iPhone) para a **vertigem e o sistema vestibular**:
+apoio ao diagnóstico, calculadoras de provas, escalas, medições com os sensores do telemóvel e uma área do doente
+com diário, reabilitação e resumo para a consulta. Inclui o módulo original de **análise do nistagmo por visão computacional**.
 
 > ⚠ **Protótipo de investigação.** Não é um dispositivo médico certificado. As sugestões não substituem o
-> juízo clínico. O conteúdo clínico (regras e manobras) tem de ser revisto pelo médico responsável antes de qualquer uso com doentes.
+> juízo clínico. O conteúdo clínico (regras, critérios, manobras, traduções das escalas) tem de ser revisto pelo médico responsável antes de qualquer uso com doentes.
 
-## Funcionalidades
+## Módulos
+
+O ecrã inicial tem dois perfis — **Profissional** e **Doente**. Todos os dados ficam só no dispositivo (`localStorage`; vídeos em IndexedDB), com exportação/importação em JSON (`#/dados`).
+
+### Apoio ao diagnóstico
+| Rota | Módulo | Lógica |
+|---|---|---|
+| `#/vppb` | **Assistente VPPB** — Dix-Hallpike e supine roll test guiados → canal afetado → manobra (Epley, Semont, Lempert/BBQ, Gufoni, Yacovino) com **animação 3D** e cronómetro por passo | `clinical/bppvWizard.ts` (reutiliza `clinical/engine.ts`), `clinical/poses.ts`, `ui/maneuverPlayer.ts` |
+| `#/exame` | Exame com vídeo e análise automática do nistagmo (módulo original, descrito abaixo) | `views/exam.ts` |
+| `#/hints` | **HINTS / HINTS+** (INFARCT + hipoacusia nova) | `clinical/hints.ts` |
+| `#/urgencia` | **Triagem na urgência**: HINTS+, ABCD2, fatores de risco vascular, sinais de alarme, graduação da marcha → quando pedir RM / Neurologia | `clinical/triage.ts` |
+| `#/icvd` | **Critérios da Bárány Society (ICVD)** por timing & triggers: VPPB, Ménière definitiva/provável, migrânea vestibular, PPPD, nevrite vestibular, paroxismia, vestibulopatia bilateral, deiscência do canal superior, mal de débarquement — com cada critério marcado ✓/✗/? | `clinical/icvd.ts` |
+| `#/vppb-atipica` | **VPPB atípica**: apogeotrópica, canal anterior, multicanal, sinais centrais, **registo de recidivas** | `views/atypical.ts` |
+
+### Calculadoras e relatórios
+| Rota | Módulo |
+|---|---|
+| `#/provas/caloricas` | Paresia canalar (Jongkees), preponderância direcional, hiporreflexia bilateral, índice de fixação |
+| `#/provas/vhit` | Ganhos por canal, sacadas cobertas/não cobertas, padrão nervo superior/inferior, critério bilateral |
+| `#/provas/vemp` | cVEMP/oVEMP: razão de assimetria, limiares, suspeita de terceira janela |
+| `#/provas/relatorio` | **Relatório integrado** → periférica uni/bilateral, central ou terceira janela (imprimível) |
+| `#/meniere-aao` | Ménière AAO-HNS 1995: estádio (PTA 4 frequências), nível funcional, classe de controlo da vertigem, pontos para decidir gentamicina/cirurgia |
+
+Lógica em `clinical/labtests.ts` e `clinical/meniere.ts`; limiares configuráveis.
+
+### Questionários e escalas (`#/escalas`, `#/quedas`)
+DHI, VSS-SF, ABC, NPQ, MSSQ-short; risco de queda: **TUG** (cronómetro), DGI, FGA e Berg (com cronómetro nas tarefas temporizadas). Histórico e gráfico de evolução. `clinical/scales.ts`.
+As traduções são de trabalho — para investigação usar as versões portuguesas validadas.
+
+### Medições com o telemóvel (experimentais)
+| Rota | Medição | Sensor |
+|---|---|---|
+| `#/sensores/nistagmo` | Gravação do nistagmo em casa + estimativa da direção (tracking ocular) | câmara + MediaPipe |
+| `#/sensores/vvs` | Vertical visual subjetiva — teste do balde ou linha no ecrã | orientação (giroscópio/acelerómetro) |
+| `#/sensores/dva` | Acuidade visual dinâmica — E de Snellen calibrado (logMAR), só aparece com a cabeça acima de uma velocidade | câmara frontal (pose da cabeça) |
+| `#/sensores/postura` | Posturografia simplificada — Romberg e mCTSIB (RMS, área da elipse 95 %, jerk) | acelerómetro (telemóvel na cintura) |
+| `#/sensores/epley` | Manobra guiada: compara a gravidade medida no referencial da cabeça com a posição-alvo de cada passo; conta o tempo só dentro da tolerância; instruções por voz | orientação (telemóvel preso à cabeça, calibração em 2 passos) |
+
+### Para o doente
+`#/doente/crise` e `#/doente/dia` (diário de crises e fatores diários: sal, cafeína, álcool, stress, sono, audição, acufeno), `#/doente/diario` (gráficos, associação fator→crise, exportação CSV), `#/doente/audicao` (teste de audição relativo nas frequências graves), `#/doente/migranea` (profilaxia e resposta ≥ 50 %), `#/doente/reabilitacao` (Cawthorne-Cooksey, equilíbrio, programa, **lembretes .ics**, adesão), `#/doente/vor` (VOR x1/x2 com alvo, metrónomo e confirmação do movimento da cabeça pela câmara), `#/doente/habituacao` (estímulos optocinéticos progressivos com doseamento pelos sintomas, modo VR), `#/educacao` e `#/resumo` (**resumo de uma página em PDF** para a consulta).
+
+---
+
+## Módulo original: análise do nistagmo por vídeo (`#/exame`)
 
 - **Captura**
   - *Câmara em direto*: o telemóvel filma o rosto do doente (câmara traseira por defeito); botão **«Posição atingida»** marca t0 para medir a latência.
@@ -97,9 +140,12 @@ npm run e2e          # demo + ficheiro de vídeo + câmara falsa do Chromium
 
 ```
 src/
+  core/       router (hash), armazenamento local, sensores, áudio, gráficos SVG, tracking da cabeça
   analysis/   reamostragem, filtros, deteção de nistagmo (puro, testável)
   tracking/   pupila (grande plano), torção da íris, MediaPipe, fontes de vídeo
-  clinical/   provas, manobras, motor de regras
+  clinical/   lógica clínica pura e testada: motor VPPB, HINTS, triagem, ICVD, escalas, provas, Ménière, poses, diário, métricas dos sensores
+  content/    exercícios de reabilitação e textos de educação
+  views/      ecrãs (diagnóstico, calculadoras, escalas, sensors/, patient/)
   demo/       gerador de nistagmo e de olho sintético
   ui/         gráfico, formulários, glifo do nistagmo, ícones
 tests/        vitest
