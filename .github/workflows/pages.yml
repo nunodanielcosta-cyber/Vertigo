@@ -3,7 +3,7 @@ name: Web / iPhone (PWA no GitHub Pages)
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches: [main, claude/serene-curie-5osyw6]
 
 permissions:
   contents: read
