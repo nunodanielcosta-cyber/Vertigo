@@ -96,6 +96,8 @@ const WASM_URLS = ['./mediapipe/wasm', `https://cdn.jsdelivr.net/npm/@mediapipe/
 const MODEL_URLS = ['./models/face_landmarker.task', 'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task'];
 
 async function firstReachable(urls: string[], probe: (u: string) => string): Promise<string> {
+  // apps nativas (Electron app://, iOS capacitor://): os ficheiros vêm sempre empacotados
+  if (!location.protocol.startsWith('http')) return urls[0];
   for (const u of urls) {
     try {
       const r = await fetch(probe(u), { method: 'HEAD' });
@@ -125,6 +127,9 @@ export class FaceProcessor implements FrameProcessor {
 
   async init() {
     if (this.landmarker) return;
+    if (!document.createElement('canvas').getContext('webgl2')) {
+      throw new Error('Este dispositivo não suporta WebGL 2, necessário para a deteção facial. Use o modo «Grande plano do olho».');
+    }
     const { FaceLandmarker, FilesetResolver } = await import('@mediapipe/tasks-vision');
     const wasm = await firstReachable(WASM_URLS, (u) => `${u}/vision_wasm_internal.js`);
     const model = await firstReachable(MODEL_URLS, (u) => u);

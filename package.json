@@ -12,14 +12,60 @@
     "typecheck": "tsc --noEmit",
     "make-test-video": "node scripts/make-synthetic-y4m.mjs",
     "postinstall": "node scripts/setup-assets.mjs",
-    "e2e": "node scripts/e2e-smoke.mjs"
-  },
-  "dependencies": {
-    "@mediapipe/tasks-vision": "^1.2.3"
+    "e2e": "node scripts/e2e-smoke.mjs",
+    "desktop": "npm run build && electron .",
+    "dist:win": "npm run build && electron-builder --win nsis portable",
+    "ios": "npm run build && npx cap sync ios && npx cap open ios",
+    "ios:sync": "npm run build && npx cap sync ios"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.6.2",
+    "@capacitor/core": "^8.6.2",
+    "@capacitor/ios": "^8.6.2",
+    "@mediapipe/tasks-vision": "^1.2.3",
+    "electron": "^45.3.3",
+    "electron-builder": "^26.18.0",
     "typescript": "^7.0.2",
     "vite": "^8.3.8",
     "vitest": "^5.1.0"
+  },
+  "main": "desktop/main.cjs",
+  "author": "Vertigo",
+  "build": {
+    "appId": "pt.vertigo.app",
+    "productName": "Vertigo",
+    "copyright": "Vertigo",
+    "directories": {
+      "output": "release",
+      "buildResources": "brand"
+    },
+    "files": [
+      "dist/**/*",
+      "desktop/**/*",
+      "brand/png/icon-256.png",
+      "package.json"
+    ],
+    "asar": true,
+    "win": {
+      "icon": "brand/icon.ico",
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "shortcutName": "Vertigo",
+      "installerLanguages": [
+        "pt_PT"
+      ],
+      "language": "2070",
+      "artifactName": "Vertigo-Setup-${version}.${ext}"
+    },
+    "portable": {
+      "artifactName": "Vertigo-${version}-portable.exe"
+    }
   }
 }

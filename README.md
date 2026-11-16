@@ -43,6 +43,38 @@ Aplicação web (PWA, funciona no telemóvel e no computador) que **grava os olh
 Tudo no **referencial do doente**: H + = direita, V + = cima, T + = polo superior para a orelha direita
 (= anti-horário visto pelo examinador). A direção do nistagmo é a da **fase rápida**.
 
+## Instalação
+
+### iPhone / iPad
+
+**Opção A — app web instalável (já disponível, sem App Store).**
+A Vertigo é uma PWA: depois de publicada num endereço HTTPS (o workflow `Web / iPhone` publica-a no GitHub Pages),
+abra o endereço no **Safari** → botão Partilhar → **«Adicionar ao ecrã principal»**. Fica com ícone próprio, abre em
+ecrã inteiro, usa a câmara e funciona offline depois da primeira utilização.
+
+**Opção B — app nativa (App Store / TestFlight).** O projeto Xcode está em `ios/` (Capacitor). Requer um Mac com Xcode
+e uma conta Apple Developer:
+
+```bash
+npm install
+npm run ios          # build web + sincroniza com ios/ + abre o Xcode
+```
+
+No Xcode: *Signing & Capabilities* → escolher a equipa → *Product ▸ Archive* → distribuir via TestFlight/App Store.
+O pedido de acesso à câmara (`NSCameraUsageDescription`) já está configurado em português.
+
+### Windows (.exe)
+
+- `Vertigo-Setup-<versão>.exe` — instalador (cria atalho no menu Iniciar);
+- `Vertigo-<versão>-portable.exe` — executável único, sem instalação.
+
+Gerados pelo workflow **Windows (.exe)** do GitHub Actions (botão *Run workflow*, ou automaticamente ao criar uma tag `v*`,
+que os anexa à release). Localmente: `npm run dist:win` (em Windows; em Linux requer o Wine).
+Os executáveis não estão assinados digitalmente: o Windows SmartScreen mostra um aviso («Mais informações» → «Executar mesmo assim»).
+Para distribuição alargada convém um certificado de assinatura de código.
+
+A versão de computador funciona totalmente offline (modelo e runtime incluídos) e só pede permissão para a câmara.
+
 ## Desenvolvimento
 
 ```bash
@@ -69,9 +101,13 @@ src/
   tracking/   pupila (grande plano), torção da íris, MediaPipe, fontes de vídeo
   clinical/   provas, manobras, motor de regras
   demo/       gerador de nistagmo e de olho sintético
-  ui/         gráfico, formulários
+  ui/         gráfico, formulários, glifo do nistagmo, ícones
 tests/        vitest
 scripts/      assets offline, vídeo sintético, e2e
+brand/        logotipo (SVG), ícones PNG/ICO, folha de apresentação
+desktop/      aplicação Windows (Electron)
+ios/          projeto Xcode (Capacitor)
+.github/      workflows: .exe Windows e publicação web (PWA)
 ```
 
 ## Limitações conhecidas e próximos passos

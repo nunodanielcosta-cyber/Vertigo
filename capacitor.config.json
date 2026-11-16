@@ -1,0 +1,9 @@
+{
+  "appId": "pt.vertigo.app",
+  "appName": "Vertigo",
+  "webDir": "dist",
+  "ios": {
+    "contentInset": "never",
+    "backgroundColor": "#f3f5f7"
+  }
+}

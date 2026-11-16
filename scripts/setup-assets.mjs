@@ -7,7 +7,9 @@ const MODEL_URL = 'https://storage.googleapis.com/mediapipe-models/face_landmark
 const wasmSrc = 'node_modules/@mediapipe/tasks-vision/wasm';
 if (existsSync(wasmSrc)) {
   mkdirSync('public/mediapipe', { recursive: true });
-  cpSync(wasmSrc, 'public/mediapipe/wasm', { recursive: true });
+  // só a variante não-módulo é usada pelo FilesetResolver (poupa ~15 MB)
+  mkdirSync('public/mediapipe/wasm', { recursive: true });
+  for (const f of ['vision_wasm_internal.js', 'vision_wasm_internal.wasm']) cpSync(`${wasmSrc}/${f}`, `public/mediapipe/wasm/${f}`);
   console.log('✓ WASM do MediaPipe copiado para public/mediapipe/wasm');
 }
 const model = 'public/models/face_landmarker.task';

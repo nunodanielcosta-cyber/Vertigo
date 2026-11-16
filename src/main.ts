@@ -129,7 +129,7 @@ function disclaimer() {
 }
 
 function logo() {
-  return `<svg class="logo" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="9" fill="currentColor"/><path d="M5 19 L10 12 L12.5 16 L17 9 L19 13 L27 6" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="16" cy="22.5" r="5" fill="none" stroke="#fff" stroke-width="1.9"/><circle cx="16" cy="22.5" r="2" fill="#fff"/></svg>`;
+  return `<svg class="logo" viewBox="0 0 512 512" aria-hidden="true"><defs><linearGradient id="lgbg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2f74e0"/><stop offset="1" stop-color="#143d8c"/></linearGradient><marker id="lghead" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="2.6" markerHeight="2.6" markerUnits="strokeWidth" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#5ee6c2"/></marker></defs><rect width="512" height="512" rx="114" fill="url(#lgbg)"/><path d="M84 284 Q256 116 428 284 Q256 452 84 284 Z" fill="none" stroke="#fff" stroke-width="22" stroke-linejoin="round"/><circle cx="256" cy="284" r="66" fill="#fff"/><circle cx="256" cy="284" r="28" fill="#143d8c"/><circle cx="276" cy="262" r="10" fill="#fff"/><path d="M352 196 A124 124 0 0 0 160 196" fill="none" stroke="#5ee6c2" stroke-width="24" stroke-linecap="round" marker-end="url(#lghead)"/></svg>`;
 }
 
 /* ================================================================== */
@@ -628,6 +628,11 @@ function errText(err: unknown): string {
   if (err instanceof Error) return err.message;
   if (err && typeof err === 'object' && 'type' in err) return `falha ao carregar recurso (${(err as Event).type})`;
   return String(err);
+}
+
+// service worker só na versão web (http/https); no Electron e no iOS nativo os ficheiros já são locais
+if ('serviceWorker' in navigator && location.protocol.startsWith('http') && import.meta.env.PROD) {
+  navigator.serviceWorker.register('./sw.js').catch(() => { /* sem modo offline */ });
 }
 
 home();
