@@ -92,10 +92,10 @@ export class CloseupProcessor implements FrameProcessor {
 /* ------------------------------------------------------------------ */
 const MP_VERSION = '1.2.3';
 // primeiro os ficheiros locais (copiados por scripts/setup-assets.mjs — funcionam offline); depois o CDN
-const WASM_URLS = ['./mediapipe/wasm', `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${MP_VERSION}/wasm`];
-const MODEL_URLS = ['./models/face_landmarker.task', 'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task'];
+export const WASM_URLS = ['./mediapipe/wasm', `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${MP_VERSION}/wasm`];
+export const MODEL_URLS = ['./models/face_landmarker.task', 'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task'];
 
-async function firstReachable(urls: string[], probe: (u: string) => string): Promise<string> {
+export async function firstReachable(urls: string[], probe: (u: string) => string): Promise<string> {
   // apps nativas (Electron app://, iOS capacitor://): os ficheiros vêm sempre empacotados
   if (!location.protocol.startsWith('http')) return urls[0];
   for (const u of urls) {

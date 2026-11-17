@@ -1,6 +1,6 @@
 // Service worker: torna a Vertigo utilizável offline depois da primeira visita
 // (app, runtime WASM e modelo de deteção facial ficam em cache no dispositivo).
-const CACHE = 'vertigo-v1';
+const CACHE = 'vertigo-v2';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icon.svg', './apple-touch-icon.png'];
 
 self.addEventListener('install', (e) => {
